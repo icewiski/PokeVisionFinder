@@ -46,7 +46,7 @@ To all contributors on github, ownedcore and discord.
 
 If you want to contribute with a beer here you can, thanks!
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JSE6WU28B8XFW)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2DQCFP2CK8EDE)
 
 # Discord
 Join Discord.
