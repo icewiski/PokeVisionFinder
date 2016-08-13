@@ -7,7 +7,7 @@ import json
 from pokemons import pokemonlist
 import httplib
 import re
-import requests
+"""import requests"""
 import subprocess
 import wincolors
 import datetime
@@ -26,7 +26,7 @@ _pokemons = []
 
 _pokemonslisted = []
 
-_session =requests.Session()
+"""_session =requests.Session()"""
 _sessionid = ""
 
 _scriptpath = os.path.abspath(os.path.dirname(__file__))
@@ -488,8 +488,8 @@ else:
     _inputpoke = _args.pokemons
     _pokesplit(_inputpoke)
 
-if "Track" in _useMode or "All" in _useMode:
-    _findSessionIdTrack()
+"""if "Track" in _useMode or "All" in _useMode:
+    _findSessionIdTrack()"""
 _populateCities()
 if _nt and _colors:
     wincolors.paint(wincolors.colors.INFO)
