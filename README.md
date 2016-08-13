@@ -6,19 +6,18 @@ Supports which pokemons to catch in a .txt file.
 
 
 
-Require: http://docs.python-requests.org/en/master/
 
 Command Line Usage:
 
 ```ruby
-usage: PokeVisionFinder.py [-h] [-m {Skip,Track,All}] [-s] [-l] [-L] [-c] [-C]
+usage: PokeVisionFinder.py [-h] [-m {Skip,All}] [-s] [-l] [-L] [-c] [-C]
                            [-p POKEMONS] -f FACTOR [-v {0,1,2}]
 
 PokeVisionFinder v0.1.4 - encode
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m {Skip,Track,All}, --mode {Skip,Track,All}
+  -m {Skip,Track,All}, --mode {Skip,All}
                         Mode of work
   -s, --sniper          No use sniper
   -l, --loop            Run infinite
@@ -46,7 +45,7 @@ To all contributors on github, ownedcore and discord.
 
 If you want to contribute with a beer here you can, thanks!
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=2DQCFP2CK8EDE)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JSE6WU28B8XFW)
 
 # Discord
 Join Discord.
