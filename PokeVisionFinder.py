@@ -2,7 +2,7 @@ import os
 import urllib2
 import traceback
 import argparse
-from time import time
+from time import sleep,time
 import json
 from pokemons import pokemonlist
 import httplib
@@ -10,9 +10,11 @@ import re
 import requests
 import subprocess
 import wincolors
+import datetime
 
-__author__ = 'encode'
-__version__ = '0.1.5'
+__author__ = 'Original by: encode Modified by: hypertoken'
+__version__ = '0.1.6'
+__git__ ='https://github.com/hypertoken/PokeVisionFinder'
 
 _nt = False
 if os.name is "nt":
@@ -201,7 +203,7 @@ def _pokesplit(pokemons):
     _pokemons = pokemons.split(",")
 
 #POkePrinter
-def _printer(name,lat,lng,exp):
+def _printer(name,lat,lng,exp,src):
     _remain = float(exp)-time()
     _minutes = int(_remain / 60)
     _seconds = int(_remain % 60)
@@ -212,16 +214,47 @@ def _printer(name,lat,lng,exp):
     print "Pokemon: " + name
     print "Coordinates: " + str(lat) + "," + str(lng)
     print "Expires in: " + _expire
+    print "Source: " + src
     print "-------------------------------------------------"
     if _logging:
         _logPokemon(name, str(lat), str(lng), _expire)
 
+# Cleanup function for logfile
+def _logCleanup():
+    os.chdir(_scriptpath)
+    with open("pokemons.log", "r") as f:
+        timestrings = f.readlines()
+        f.close()
+    with open("pokemons.log", "w") as f:
+        for timestring in timestrings:
+            expireindex = timestring.find("Expires in:")
+            expiretime = timestring[expireindex+len("Expires in: ["):timestring.find("[Timestamp")-2]
+            expireminindex = expiretime.find("Minutes")
+            expireminutes = expiretime[:expireminindex-1]
+            expiresecindex = expiretime.find("Seconds")
+            expireseconds = expiretime[expireminindex+len("Minutes, "):expiresecindex-1]
+            expireinseconds = (int(expireminutes) * 60) + int(expireseconds)
+            oldtimeindex = timestring.find("Timestamp: ")
+            oldtimeindex = oldtimeindex + len("Timestamp: ")
+            oldtime = timestring[oldtimeindex:]
+            oldtimeindex = oldtime.find("]")
+            oldtime = oldtime[:oldtimeindex]
+            oldtime = datetime.datetime.strptime(oldtime, '%Y-%m-%d %H:%M:%S')
+            xpiretime = oldtime + datetime.timedelta(seconds = expireinseconds)
+            nowtime = datetime.datetime.now()
+            timeleft = xpiretime - nowtime
+            expired = datetime.timedelta(seconds=45)
+            if timeleft >= expired:
+                f.write(timestring)
+        f.close()
+        
 #Logger
 def _logPokemon(name, lat, lng, expire):
     os.chdir(_scriptpath)
     with open("pokemons.log", "a+") as f:
-        f.write("[" + name + "] [" + lat + "," + lng + "] [" + expire + "]\n")
-        f.close()
+        f.write("[" + name + "] [" + lat + "," + lng + "] Expires in: [" + expire + "] [" +'Timestamp: {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) +"]\n")
+        f.close() 
+        _logCleanup()
 
 #CoordsLoader
 def _populateCities():
@@ -234,7 +267,7 @@ def _populateCities():
         f.close()
 
 #Finder
-def _finderTrackemon(city):
+"""def _finderTrackemon(city):
     if _nt and _colors:
         wincolors.paint(wincolors.colors.INFO)
     print "[INFO] Looking pokemons in: " + city[0]
@@ -285,12 +318,12 @@ def _finderTrackemon(city):
             elif _verbose == 2:
                 print '[ERROR] TypeError= ' + str(e)
             _logError(str(e))
-
+"""
 #Finder
 def _finderSkipLagged(city):
     if _nt and _colors:
         wincolors.paint(wincolors.colors.INFO)
-    print "[INFO] Looking pokemons in: " + city[0]
+    print "[INFO] Looking for pokemons in: " + city[0]
     _latitudesw = float(city[1]) - (0.05 * _zoomFactor)
     _longitudesw = float(city[2]) - (0.05 * _zoomFactor)
     _latitudene = float(city[1]) + (0.05 * _zoomFactor)
@@ -312,10 +345,12 @@ def _finderSkipLagged(city):
                     _combo = _name+str(_lat)+str(_lng)
                     if _combo not in _pokemonslisted:
                         _pokemonslisted.append(_combo)
-                        _printer(_name, _lat, _lng, _exp)
+                        _printer(_name, _lat, _lng, _exp, "Skiplagged")
                         if ps_use: _pokeSniper(_name, str(_lat), str(_lng))
                     else:
-                        print "[INFO] Pokemon already listed found."
+                        if _nt and _colors:
+                            wincolors.paint(wincolors.colors.WARNING)
+                        print "[INFO] This "+_name+" already found."
         except KeyError, e:
             if _nt and _colors:
                 wincolors.paint(wincolors.colors.ERROR)
@@ -339,7 +374,36 @@ def _finderSkipLagged(city):
             elif _verbose == 2:
                 print '[ERROR] TypeError= ' + str(e)
             _logError(str(e))
+"""
+#Finder
+def _finderGo(city):
+    if _nt and _colors:
+        wincolors.paint(wincolors.colors.INFO)
+    print "[INFO] Looking for pokemons in: " + city[0]
+    _latitudesw = float(city[1]) - (0.05 * _zoomFactor)
+    _longitudesw = float(city[2]) - (0.05 * _zoomFactor)
+    _latitudene = float(city[1]) + (0.05 * _zoomFactor)
+    _longitudene = float(city[2]) + (0.05 * _zoomFactor)
 
+    _scanurl = "https://api-live-iix1.pokemongo.id/maps?vt="+str(_latitudesw)+","+str(_longitudesw)+\
+               ","+str(_latitudene)+","+str(_longitudene)+"&u="+str(time())
+    _scanurljsondata = _jsondata(_scanurl)
+
+    for pokename in _pokemons:
+        try:
+            for pokemon in _scanurljsondata['pokemons']:
+                _id = pokemon['pokemon_id']
+                _name = _pokename(_id)
+                if pokename.lower() in _name.lower():
+                    _lat = pokemon['latitude']
+                    _lng = pokemon['longitude']
+                    _exp = pokemon['expires']
+                    _printer(_name, _lat, _lng, _exp, "pokemongo.id")
+        except KeyError, e:
+            print '[ERROR] KeyError = ' + str(e)
+        except IndexError, e:
+            print '[ERROR] IndexError = ' + str(e)
+"""
 #Sniper
 def _pokeSniper(name, lat, lng):
     if _nt and _colors:
@@ -365,18 +429,27 @@ def _pokeSniper(name, lat, lng):
             print error
         _logError(str(e))
         _logError(error)
+    for i in reversed(range(0, 10)):
+        sleep(1)
+        if _nt and _colors:
+            wincolors.paint(wincolors.colors.TIMER)
+        print "Sleeping for %s seconds due to API change \r" %i,
 
 #Loop
 def _loop():
     for city in _cities:
         if "Skip" in _useMode or "All" in _useMode:
             _finderSkipLagged(city)
-        elif "Track" in _useMode or "All" in _useMode:
+            """elif "Track" in _useMode or "All" in _useMode:
             _finderTrackemon(city)
-
+            elif "Go" in _useMode or "All" in _useMode:
+            _finderGo(city)"""
+        else:
+            _finderSkipLagged(city)
+            
 #Init
 _parser = argparse.ArgumentParser(description='PokeVisionFinder v'+__version__+' - encode')
-_parser.add_argument('-m','--mode', help='Mode of work', choices=["Skip", "Track","All"], default="All")
+_parser.add_argument('-m','--mode', help='Mode of work', choices=["Go","Skip", "Track","All"], default="All")
 _parser.add_argument('-s', '--sniper', help='No use sniper', action='store_false', default=True)
 _parser.add_argument('-S', '--sniperterminal', help='Sniper on a different terminal', action='store_true', default=False)
 _parser.add_argument('-l', '--loop', help='Run infinite', action='store_true', default=False)
@@ -424,7 +497,7 @@ print """
 =====================================================================
 Welcome to PokeVisionFinder """ + __version__ + """
 Author: """ + __author__ + """
-Check out our Github at: https://github.com/encode32/PokeVisionFinder
+Check out our Github at: """+ __git__ + """
 =====================================================================
 """
 if _nonstop:
